@@ -1,0 +1,13 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ah_anthropic"
+version = "1.0.0"
+description = "Anthropic/Claude LLM for AH"
+requires-python = ">=3.7"
+dependencies = ["anthropic", "asyncio"]
+
+[project.optional-dependencies]
+dev = ["pytest"]
