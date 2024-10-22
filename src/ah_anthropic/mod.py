@@ -12,7 +12,7 @@ async def stream_chat(model, messages=[], context=None, num_ctx=200000, temperat
         # first make a deep copy of the messages so that original aren't modified
         messages = [dict(message) for message in messages]
 
-        model = "claude-3-5-sonnet-20240620"
+        model = "claude-3-5-sonnet-20241022"
         system = messages[0]['content']
         system = [{
             "type": "text",
