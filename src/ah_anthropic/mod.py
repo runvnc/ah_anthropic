@@ -2,10 +2,11 @@ import asyncio
 from lib.providers.services import service
 import anthropic
 import os
+import base64
+from io import BytesIO
+import sys
 
 client = anthropic.AsyncAnthropic(api_key=os.environ.get("ANTHROPIC_API_KEY"))
-
-print('\033[92m ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ \033[0m')
 
 
 @service()
@@ -13,7 +14,8 @@ async def stream_chat(model, messages=[], context=None, num_ctx=200000, temperat
     try:
         # first make a deep copy of the messages so that original aren't modified
         messages = [dict(message) for message in messages]
-
+        print('\033[93m' + '-'*80 + '\033[0m')
+ 
         model = "claude-3-5-sonnet-20241022"
         system = messages[0]['content']
         system = [{
@@ -43,11 +45,29 @@ async def stream_chat(model, messages=[], context=None, num_ctx=200000, temperat
                         "cache_control": { "type": "ephemeral" }
                     }]
 
-        #original_stream = await client.beta.prompt_caching.messages.create( 
+        new_messages = []
+        for message in messages:
+            print(str(message)[:500])
+            #print('\033[93m' + str(message) + '\033[0m')
+            # print object type (should be dict)
+            print(type(message))
+            new_parts = []
+            drop = False
+            for part in message['content']:
+                if not 'type' in part:
+                    print('Dropping message')
+                    drop = True
+                else:
+                    new_parts.append(part)
+            if not drop:
+                new_messages.append(message)
+
+        print("OK messages:", new_messages)
+
         original_stream = await client.messages.create(
                 model=model,
                 system=system,
-                messages=messages,
+                messages=new_messages,
                 temperature=temperature,
                 max_tokens=max_tokens,
                 stream=True,
@@ -69,3 +89,21 @@ async def stream_chat(model, messages=[], context=None, num_ctx=200000, temperat
 
     except Exception as e:
         print('claude.ai error:', e)
+
+
+@service()
+async def format_image_message(pil_image, context=None):
+    print("saving")
+    buffer = BytesIO()
+    pil_image.save(buffer, format='PNG')
+    image_base64 = base64.b64encode(buffer.getvalue()).decode('utf-8')
+ 
+    return {
+        "type": "image",
+        "source": {
+            "type": "base64",
+            "media_type": f"image/png",
+            "data": image_base64
+        }
+    }
+

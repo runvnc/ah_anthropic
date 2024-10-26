@@ -2,5 +2,5 @@
   "name": "Anthropic (Claude)",
   "version": "1.0.0",
   "description": "Anthropic's LLMs like Claude",
-  "services": ["stream_chat"]
+  "services": ["stream_chat", "format_image_message"]
 }
