@@ -107,3 +107,7 @@ async def format_image_message(pil_image, context=None):
         }
     }
 
+@service()
+async def get_image_dimensions(context=None):
+    return 1568, 1568, 1192464 
+
