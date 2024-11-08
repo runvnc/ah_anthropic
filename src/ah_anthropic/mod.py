@@ -12,7 +12,7 @@ client = anthropic.AsyncAnthropic(api_key=os.environ.get("ANTHROPIC_API_KEY"))
 @service()
 async def stream_chat(model, messages=[], context=None, num_ctx=200000, temperature=0.0, max_tokens=2500, num_gpu_layers=0):
     try:
-        # first make a deep copy of the messages so that original aren't modified
+        print("anthropic stream_chat")
         messages = [dict(message) for message in messages]
         print('\033[93m' + '-'*80 + '\033[0m')
  
@@ -45,30 +45,30 @@ async def stream_chat(model, messages=[], context=None, num_ctx=200000, temperat
                         "cache_control": { "type": "ephemeral" }
                     }]
 
-        new_messages = []
-        for message in messages:
-            print(str(message)[:500])
-            #print('\033[93m' + str(message) + '\033[0m')
-            # print object type (should be dict)
-            print(type(message))
-            new_parts = []
-            drop = False
-            for part in message['content']:
-                if not 'type' in part:
-                    print('Dropping message')
-                    drop = True
-                else:
-                    new_parts.append(part)
-            if not drop:
-                new_messages.append(message)
+        #new_messages = []
+        #for message in messages:
+        #    print(str(message)[:500])
+        #    #print('\033[93m' + str(message) + '\033[0m')
+        #    # print object type (should be dict)
+        #    print(type(message))
+        #    new_parts = []
+        #   drop = False
+        #    for part in message['content']:
+        #        if not 'type' in part:
+        #print('Dropping message')
+        #drop = True
+        #else:
+        #new_parts.append(part)
+        #if not drop:
+        #new_messages.append(message)
 
-        print("OK messages:", new_messages)
+        #print("OK messages:", new_messages)
 
         original_stream = await client.messages.create(
                 model=model,
                 system=system,
-                messages=new_messages,
-                temperature=temperature,
+                messages=messages, #new_messages,
+                temperature=0,
                 max_tokens=max_tokens,
                 stream=True,
                 extra_headers={"anthropic-beta": "prompt-caching-2024-07-31,max-tokens-3-5-sonnet-2024-07-15"}
@@ -93,16 +93,17 @@ async def stream_chat(model, messages=[], context=None, num_ctx=200000, temperat
 
 @service()
 async def format_image_message(pil_image, context=None):
-    print("saving")
     buffer = BytesIO()
+    print('converting to base64')
     pil_image.save(buffer, format='PNG')
+    
     image_base64 = base64.b64encode(buffer.getvalue()).decode('utf-8')
- 
+    print('done')
     return {
         "type": "image",
         "source": {
             "type": "base64",
-            "media_type": f"image/png",
+            "media_type": "image/png",
             "data": image_base64
         }
     }
@@ -110,4 +111,3 @@ async def format_image_message(pil_image, context=None):
 @service()
 async def get_image_dimensions(context=None):
     return 1568, 1568, 1192464 
-
