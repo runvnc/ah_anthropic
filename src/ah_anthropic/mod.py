@@ -69,7 +69,7 @@ async def stream_chat(model, messages=[], context=None, num_ctx=200000, temperat
             for content in formatted_messages[i]['content']:
                 if content['type'] == 'text':
                     content['cache_control'] = { "type": "ephemeral" }
-            cached_count += 1  # Increment once per message, not per content item
+                    cached_count += 1
 
         # Store current messages for next comparison
         _last_messages = formatted_messages.copy()
