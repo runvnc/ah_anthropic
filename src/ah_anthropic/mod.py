@@ -74,7 +74,7 @@ async def stream_chat(model, messages=[], context=None, num_ctx=200000, temperat
                 temperature=0,
                 max_tokens=max_tokens,
                 stream=True,
-                extra_headers={"anthropic-beta": "prompt-caching-2024-07-31"}
+                extra_headers={"anthropic-beta": "prompt-caching-2024-07-31,max-tokens-3-5-sonnet-2024-07-15"}
         )
 
         async def content_stream():
