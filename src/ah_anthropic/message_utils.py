@@ -1,7 +1,14 @@
+def strip_cache_control(content):
+    """Remove cache_control for comparison purposes"""
+    if isinstance(content, dict):
+        return {k: v for k, v in content.items() if k != 'cache_control'}
+    return content
+
 def compare_messages(previous_messages, current_messages):
     """
     Compare two sets of messages to find which ones have changed.
     Returns indices of changed messages in current_messages.
+    Ignores cache_control differences.
     
     Args:
         previous_messages: List of message dicts from previous call
@@ -51,10 +58,12 @@ def compare_messages(previous_messages, current_messages):
                 changed_indices.append(i)
                 continue
                 
-            # Compare each content item
+            # Compare each content item without cache_control
             for j, (curr_item, prev_item) in enumerate(zip(curr_content, prev_content)):
-                if curr_item != prev_item:
-                    print(f'\033[91m[CACHE] Content list item {j} changed at index {i}:\n- {prev_item}\n+ {curr_item}\033[0m')
+                curr_stripped = strip_cache_control(curr_item)
+                prev_stripped = strip_cache_control(prev_item)
+                if curr_stripped != prev_stripped:
+                    print(f'\033[91m[CACHE] Content list item {j} changed at index {i}:\n- {prev_stripped}\n+ {curr_stripped}\033[0m')
                     changed_indices.append(i)
                     break
                     

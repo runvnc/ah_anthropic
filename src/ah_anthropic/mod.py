@@ -12,6 +12,16 @@ client = anthropic.AsyncAnthropic(api_key=os.environ.get("ANTHROPIC_API_KEY"))
 # Store last sent messages
 _last_messages = []
 
+def prepare_message_content(message):
+    """Convert message content to proper format without modifying original"""
+    msg_copy = dict(message)
+    if isinstance(msg_copy.get('content'), str):
+        msg_copy['content'] = [{
+            "type": "text",
+            "text": msg_copy['content']
+        }]
+    return msg_copy
+
 @service()
 async def stream_chat(model, messages=[], context=None, num_ctx=200000, temperature=0.0, max_tokens=2500, num_gpu_layers=0):
     try:
@@ -21,52 +31,46 @@ async def stream_chat(model, messages=[], context=None, num_ctx=200000, temperat
         print('\033[93m' + '-'*80 + '\033[0m')
  
         model = "claude-3-5-sonnet-20241022"
-        system = messages[0]['content']
+        
+        # Prepare system message
         system = [{
             "type": "text",
-            "text": system,
+            "text": messages[0]['content'],
             "cache_control": { "type": "ephemeral" }
         }]
-        messages = messages[1:]
+        
+        # Prepare messages with proper content format
+        formatted_messages = [prepare_message_content(msg) for msg in messages[1:]]
 
         # remove any existing cache_control
-        for message in messages:
-            if isinstance(message, dict):
-                if 'content' in message:
-                    if isinstance(message['content'], list):
-                        for content in message['content']:
-                            if 'cache_control' in content:
-                                del content['cache_control']
+        for message in formatted_messages:
+            if isinstance(message['content'], list):
+                for content in message['content']:
+                    if 'cache_control' in content:
+                        del content['cache_control']
 
         # Find changed messages
-        changed_indices = compare_messages(_last_messages, messages)
+        changed_indices = compare_messages(_last_messages, formatted_messages)
         
         # We can cache up to 4 sections including system
         # So we have 3 slots for messages
         # Strategy: Cache the system message and up to 3 most recent unchanged messages
-        cache_candidates = [i for i in range(len(messages)) if i not in changed_indices]
+        cache_candidates = [i for i in range(len(formatted_messages)) if i not in changed_indices]
         messages_to_cache = cache_candidates[-3:] if len(cache_candidates) > 3 else cache_candidates
 
         # Add cache control to selected messages
         for i in messages_to_cache:
-            if isinstance(messages[i]['content'], str):
-                messages[i]['content'] = [{
-                    "type": "text",
-                    "text": messages[i]['content'],
-                    "cache_control": { "type": "ephemeral" }
-                }]
-            elif isinstance(messages[i]['content'], list):
-                for content in messages[i]['content']:
-                    if 'type' in content and content['type'] == 'text':
-                        content['cache_control'] = { "type": "ephemeral" }
+            for content in formatted_messages[i]['content']:
+                if content['type'] == 'text':
+                    content['cache_control'] = { "type": "ephemeral" }
 
         # Store current messages for next comparison
-        _last_messages = messages.copy()
+        _last_messages = formatted_messages.copy()
 
         original_stream = await client.messages.create(
                 model=model,
                 system=system,
-                messages=messages,
+                messages=formatted_messages,
                 temperature=0,
                 max_tokens=max_tokens,
                 stream=True,
