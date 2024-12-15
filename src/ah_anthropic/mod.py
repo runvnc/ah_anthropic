@@ -58,20 +58,22 @@ async def stream_chat(model, messages=[], context=None, num_ctx=200000, temperat
         cache_candidates = [i for i in range(len(formatted_messages)) if i not in changed_indices]
         messages_to_cache = cache_candidates[-3:] if len(cache_candidates) > 3 else cache_candidates
 
-        cached_count = 0
+        cached_count = 1  # Start at 1 to account for system message
         # Add cache control to selected messages
         for i in messages_to_cache:
+            if cached_count >= 4:  # Changed from > 3 to >= 4 to account for system message
+                break  # This will now break the outer loop
+                
+            # Cache the entire message as one unit
             for content in formatted_messages[i]['content']:
                 if content['type'] == 'text':
-                    if cached_count > 3:
-                        print("Can't cache more than 3 messages")
-                    else:
-                        content['cache_control'] = { "type": "ephemeral" }
-                        cached_count += 1
+                    content['cache_control'] = { "type": "ephemeral" }
+            cached_count += 1  # Increment once per message, not per content item
 
-        # Store current messages for next comparison
+# Store current messages for next comparison
         _last_messages = formatted_messages.copy()
 
+       
         original_stream = await client.messages.create(
                 model=model,
                 system=system,
