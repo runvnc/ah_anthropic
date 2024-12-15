@@ -5,6 +5,7 @@ import os
 import base64
 from io import BytesIO
 import sys
+import json
 from .message_utils import compare_messages
 
 client = anthropic.AsyncAnthropic(api_key=os.environ.get("ANTHROPIC_API_KEY"))
@@ -73,6 +74,9 @@ async def stream_chat(model, messages=[], context=None, num_ctx=200000, temperat
         # Store current messages for next comparison
         _last_messages = formatted_messages.copy()
 
+        # now we will output the messages as json
+        print('\033[93m' + 'formatted_messages' + '\033[0m')
+        print(json.dumps(formatted_messages))
        
         original_stream = await client.messages.create(
                 model=model,
