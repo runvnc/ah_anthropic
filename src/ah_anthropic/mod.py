@@ -44,6 +44,8 @@ async def stream_chat(model, messages=[], context=None, num_ctx=200000, temperat
                         "text": messages[i]['content'],
                         "cache_control": { "type": "ephemeral" }
                     }]
+                #elif isinstance(messages[i]['content'], list):
+
 
         #new_messages = []
         #for message in messages:
@@ -71,7 +73,7 @@ async def stream_chat(model, messages=[], context=None, num_ctx=200000, temperat
                 temperature=0,
                 max_tokens=max_tokens,
                 stream=True,
-                extra_headers={"anthropic-beta": "prompt-caching-2024-07-31,max-tokens-3-5-sonnet-2024-07-15"}
+                extra_headers={"anthropic-beta": "prompt-caching-2024-07-31"} #",max-tokens-3-5-sonnet-2024-07-15"}
         )
         async def content_stream():
             async for chunk in original_stream:
@@ -81,8 +83,12 @@ async def stream_chat(model, messages=[], context=None, num_ctx=200000, temperat
                     yield chunk.delta.text
                 else:
                     if os.environ.get('AH_DEBUG') == 'True':
-                        # print all chunk data in cyan
-                        print('\033[96m' + str(chunk) + '\033[0m', end='')
+                        # print all chunk data in blue with yellow text
+                        # start with header line includig chunk type
+                        print('\033[93m' + '-'*80 + '\033[0m')
+                        print('\033[93m' + str(chunk.type) + '\033[0m')
+                        print('\033[93m' + str(chunk) + '\033[0m')
+                        
                     yield ''
 
         return content_stream()
