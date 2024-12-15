@@ -58,11 +58,16 @@ async def stream_chat(model, messages=[], context=None, num_ctx=200000, temperat
         cache_candidates = [i for i in range(len(formatted_messages)) if i not in changed_indices]
         messages_to_cache = cache_candidates[-3:] if len(cache_candidates) > 3 else cache_candidates
 
+        cached_count = 0
         # Add cache control to selected messages
         for i in messages_to_cache:
             for content in formatted_messages[i]['content']:
                 if content['type'] == 'text':
+                    if cached_count > 3:
+                        print("Can't cache more than 3 messages")
+                        break
                     content['cache_control'] = { "type": "ephemeral" }
+                    cached_count += 1
 
         # Store current messages for next comparison
         _last_messages = formatted_messages.copy()
