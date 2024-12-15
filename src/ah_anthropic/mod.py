@@ -77,11 +77,15 @@ async def stream_chat(model, messages=[], context=None, num_ctx=200000, temperat
         )
         async def content_stream():
             async for chunk in original_stream:
+                print("HI THERE...")
+                print("x->")
                 if chunk.type == 'content_block_delta':
+                    print(1)
                     if os.environ.get('AH_DEBUG') == 'True':
                         print('\033[92m' + chunk.delta.text + '\033[0m', end='')
                     yield chunk.delta.text
                 else:
+                    print(2)
                     if os.environ.get('AH_DEBUG') == 'True':
                         # print all chunk data in blue with yellow text
                         # start with header line includig chunk type
