@@ -62,7 +62,7 @@ async def stream_chat(model, messages=[], context=None, num_ctx=200000, temperat
         cached_count = 1  # Start at 1 to account for system message
         # Add cache control to selected messages
         for i in messages_to_cache:
-            if cached_count > 3:  # Changed from > 3 to >= 4 to account for system message
+            if cached_count > 2:  # Changed from > 3 to >= 4 to account for system message
                 break  # This will now break the outer loop
                 
             # Cache the entire message as one unit
