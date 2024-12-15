@@ -65,9 +65,9 @@ async def stream_chat(model, messages=[], context=None, num_ctx=200000, temperat
                 if content['type'] == 'text':
                     if cached_count > 3:
                         print("Can't cache more than 3 messages")
-                        break
-                    content['cache_control'] = { "type": "ephemeral" }
-                    cached_count += 1
+                    else:
+                        content['cache_control'] = { "type": "ephemeral" }
+                        cached_count += 1
 
         # Store current messages for next comparison
         _last_messages = formatted_messages.copy()
