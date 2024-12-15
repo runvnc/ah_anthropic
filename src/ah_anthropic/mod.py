@@ -76,7 +76,8 @@ async def stream_chat(model, messages=[], context=None, num_ctx=200000, temperat
 
         # now we will output the messages as json
         print('\033[93m' + 'formatted_messages' + '\033[0m')
-        print(json.dumps(formatted_messages))
+        # need to pretty print
+        print(json.dumps(formatted_messages, indent=4)
        
         original_stream = await client.messages.create(
                 model=model,
