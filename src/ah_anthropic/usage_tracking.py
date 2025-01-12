@@ -81,6 +81,50 @@ async def set_default_costs(context=None):
         context
     )
 
+async def track_message_start(chunk, model: str, context=None):
+    """Track usage from message_start event - input tokens only"""
+    if not context or not hasattr(chunk, 'message') or not hasattr(chunk.message, 'usage'):
+        return
+
+    try:
+        usage = chunk.message.usage
+        metadata = {
+            'cache_creation_tokens': usage.cache_creation_input_tokens,
+            'cache_read_tokens': usage.cache_read_input_tokens
+        }
+        
+        # Track input tokens
+        await context.track_usage(
+            PLUGIN_ID,
+            'stream_chat.input_tokens',
+            usage.input_tokens,
+            metadata,
+            context,
+            model
+        )
+    except Exception as e:
+        print(f"Error tracking message start usage: {e}")
+
+async def track_message_delta(chunk, total_output: str, model: str, context=None):
+    """Track usage from message_delta event - output tokens only"""
+    if not context or not hasattr(chunk, 'usage'):
+        return
+
+    try:
+        metadata = {'total_output_length': len(total_output)}
+        
+        # Track output tokens from final delta
+        await context.track_usage(
+            PLUGIN_ID,
+            'stream_chat.output_tokens',
+            chunk.usage.output_tokens,
+            metadata,
+            context,
+            model
+        )
+    except Exception as e:
+        print(f"Error tracking message delta usage: {e}")
+
 async def track_message_usage(chunk, total_output: str, model: str, context=None):
     """Track usage from a message chunk if it contains usage information."""
     if not context or not hasattr(chunk, 'usage'):
