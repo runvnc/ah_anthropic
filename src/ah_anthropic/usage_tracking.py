@@ -104,12 +104,15 @@ async def track_message_start(chunk, model: str, context=None):
         )
     except Exception as e:
         print(f"Error tracking message start usage: {e}")
+        throw(e)
 
 async def track_message_delta(chunk, total_output: str, model: str, context=None):
     """Track usage from message_delta event - output tokens only"""
+    print("track_message_delta")
     if not context or not hasattr(chunk, 'usage'):
         return
 
+    print("track_message_delta 2")
     try:
         metadata = {'total_output_length': len(total_output)}
         
@@ -124,6 +127,7 @@ async def track_message_delta(chunk, total_output: str, model: str, context=None
         )
     except Exception as e:
         print(f"Error tracking message delta usage: {e}")
+        raise e
 
 async def track_message_usage(chunk, total_output: str, model: str, context=None):
     """Track usage from a message chunk if it contains usage information."""
@@ -154,6 +158,7 @@ async def track_message_usage(chunk, total_output: str, model: str, context=None
         )
     except Exception as e:
         print(f"Error tracking usage: {e}")
+        raise e
 
 @hook()
 async def startup(app, context=None):
