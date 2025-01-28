@@ -45,7 +45,7 @@ async def register_cost_types(context=None):
     print("Context app state attributes:", dir(context.app.state) if context.app else "No app in context")
         
     try:
-       print("Registering input tokens cost type...")
+        print("Registering input tokens cost type...")
         context.register_cost_type(
             'stream_chat.input_tokens',
             'Claude stream_chat input token cost',
