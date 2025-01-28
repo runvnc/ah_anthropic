@@ -47,6 +47,7 @@ async def register_cost_types(context=None):
     try:
         print("Registering input tokens cost type...")
         await context.register_cost_type(
+            PLUGIN_ID,
             'stream_chat.input_tokens',
             'Claude stream_chat input token cost',
             'tokens'
@@ -55,6 +56,7 @@ async def register_cost_types(context=None):
         
         print("Registering output tokens cost type...")
         await context.register_cost_type(
+            PLUGIN_ID,
             'stream_chat.output_tokens',
             'Claude stream_chat output token cost',
             'tokens'
