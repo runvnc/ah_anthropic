@@ -46,7 +46,7 @@ async def register_cost_types(context=None):
         
     try:
         print("Registering input tokens cost type...")
-        context.register_cost_type(
+        await context.register_cost_type(
             'stream_chat.input_tokens',
             'Claude stream_chat input token cost',
             'tokens'
@@ -54,7 +54,7 @@ async def register_cost_types(context=None):
         print("Successfully registered input tokens cost type")
         
         print("Registering output tokens cost type...")
-        context.register_cost_type(
+        await context.register_cost_type(
             'stream_chat.output_tokens',
             'Claude stream_chat output token cost',
             'tokens'
@@ -77,7 +77,7 @@ async def set_default_costs(context=None):
 
     try:
         print("Setting input token cost...")
-        context.set_cost(
+        await context.set_cost(
             PLUGIN_ID,
             'stream_chat.input_tokens',
             0.000003,  # $3 per million tokens
@@ -86,7 +86,7 @@ async def set_default_costs(context=None):
         print("Successfully set input token cost")
         
         print("Setting output token cost...")
-        context.set_cost(
+        await context.set_cost(
             PLUGIN_ID,
             'stream_chat.output_tokens',
             0.000015,  # $15 per million tokens
