@@ -36,24 +36,33 @@ def debug_log_response(chunk, debug_file="/tmp/anthropic_debug.log"):
 @service()
 async def register_cost_types(context=None):
     """Register Anthropic API cost types"""
+    print("Attempting to register cost types...")
     if not context:
+        print("Error: No context provided to register_cost_types")
         return
+
+    print("Context attributes:", dir(context))
+    print("Context app state attributes:", dir(context.app.state) if context.app else "No app in context")
         
-    await context.register_cost_type(
-        PLUGIN_ID,
-        'stream_chat.input_tokens',
-        'Claude stream_chat input token cost',
-        'tokens',
-        context
-    )
-    
-    await context.register_cost_type(
-        PLUGIN_ID,
-        'stream_chat.output_tokens',
-        'Claude stream_chat output token cost',
-        'tokens',
-        context
-    )
+    try:
+       print("Registering input tokens cost type...")
+        context.register_cost_type(
+            'stream_chat.input_tokens',
+            'Claude stream_chat input token cost',
+            'tokens'
+        )
+        print("Successfully registered input tokens cost type")
+        
+        print("Registering output tokens cost type...")
+        context.register_cost_type(
+            'stream_chat.output_tokens',
+            'Claude stream_chat output token cost',
+            'tokens'
+        )
+        print("Successfully registered output tokens cost type")
+    except Exception as e:
+        print(f"Error registering cost types: {str(e)}")
+        raise e
 
 @service()
 async def set_default_costs(context=None):
@@ -61,25 +70,32 @@ async def set_default_costs(context=None):
     These costs are approximate and should be updated based on actual pricing.
     See: https://anthropic.com/pricing
     """
+    print("Attempting to set default costs...")
     if not context:
+        print("Error: No context provided to set_default_costs")
         return
 
-    # Claude-3-Sonnet pricing (approximate)
-    await context.set_cost(
-        PLUGIN_ID,
-        'stream_chat.input_tokens',
-        0.000003,  # $3 per million tokens
-        'claude-3-5-sonnet-20241022',
-        context
-    )
-    
-    await context.set_cost(
-        PLUGIN_ID,
-        'stream_chat.output_tokens',
-        0.000015,  # $15 per million tokens
-        'claude-3-5-sonnet-20241022',
-        context
-    )
+    try:
+        print("Setting input token cost...")
+        context.set_cost(
+            PLUGIN_ID,
+            'stream_chat.input_tokens',
+            0.000003,  # $3 per million tokens
+            'claude-3-5-sonnet-20241022'
+        )
+        print("Successfully set input token cost")
+        
+        print("Setting output token cost...")
+        context.set_cost(
+            PLUGIN_ID,
+            'stream_chat.output_tokens',
+            0.000015,  # $15 per million tokens
+            'claude-3-5-sonnet-20241022'
+        )
+        print("Successfully set output token cost")
+    except Exception as e:
+        print(f"Error setting default costs: {str(e)}")
+        raise e
 
 async def track_message_start(chunk, model: str, context=None):
     """Track usage from message_start event - input tokens only"""
@@ -104,7 +120,7 @@ async def track_message_start(chunk, model: str, context=None):
         )
     except Exception as e:
         print(f"Error tracking message start usage: {e}")
-        throw(e)
+        raise e
 
 async def track_message_delta(chunk, total_output: str, model: str, context=None):
     """Track usage from message_delta event - output tokens only"""
@@ -163,6 +179,14 @@ async def track_message_usage(chunk, total_output: str, model: str, context=None
 @hook()
 async def startup(app, context=None):
     """Register cost types and set default costs during startup"""
-    if context:
+    print("Anthropic usage tracking startup hook called")
+    try:
+        print("Calling register_cost_types...")
         await register_cost_types(context)
+        print("Calling set_default_costs...")
         await set_default_costs(context)
+        print("Startup hook completed successfully")
+    except Exception as e:
+        print(f"Error in startup hook: {str(e)}")
+        raise e
+
