@@ -110,12 +110,15 @@ async def track_message_start(chunk, model: str, context=None):
             'cache_creation_tokens': usage.cache_creation_input_tokens,
             'cache_read_tokens': usage.cache_read_input_tokens
         }
-        
+        cache_create = 0
+        if usage.cache_creation_input_tokens:
+            cache_create = usage.cache_creation_input_tokens
+
         # Track input tokens
         await context.track_usage(
             PLUGIN_ID,
             'stream_chat.input_tokens',
-            usage.input_tokens,
+            usage.input_tokens + cache_create,
             metadata,
             context,
             model
