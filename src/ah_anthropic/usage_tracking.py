@@ -114,15 +114,17 @@ async def track_message_start(chunk, model: str, context=None):
         if usage.cache_creation_input_tokens:
             cache_create = usage.cache_creation_input_tokens
 
-        # Track input tokens
-        await context.track_usage(
-            PLUGIN_ID,
-            'stream_chat.input_tokens',
-            usage.input_tokens + cache_create,
-            metadata,
-            context,
-            model
-        )
+        total = usage.input_tokens + cache_create
+        if total > 0:
+            # Track input tokens
+            await context.track_usage(
+                PLUGIN_ID,
+                'stream_chat.input_tokens',
+                total,
+                metadata,
+                context,
+                model
+            )
     except Exception as e:
         print(f"Error tracking message start usage: {e}")
         raise e
@@ -136,16 +138,23 @@ async def track_message_delta(chunk, total_output: str, model: str, context=None
     print("track_message_delta 2")
     try:
         metadata = {'total_output_length': len(total_output)}
-        
-        # Track output tokens from final delta
-        await context.track_usage(
-            PLUGIN_ID,
-            'stream_chat.output_tokens',
-            chunk.usage.output_tokens,
-            metadata,
-            context,
-            model
-        )
+        cache_create = 0
+        try:
+            if chunk.cache_creation_input_tokens:
+                cache_create = chunk.cache_creation_input_tokens
+        except:
+            pass
+        total = chunk.usage + cache_create
+        if total > 0:
+            # Track output tokens from final delta
+            await context.track_usage(
+                PLUGIN_ID,
+                'stream_chat.output_tokens',
+                total,
+                metadata,
+                context,
+                model
+            )
     except Exception as e:
         print(f"Error tracking message delta usage: {e}")
         raise e
@@ -157,26 +166,35 @@ async def track_message_usage(chunk, total_output: str, model: str, context=None
 
     try:
         metadata = {'total_output_length': len(total_output)}
-        
-        # Track input tokens
-        await context.track_usage(
-            PLUGIN_ID,
-            'stream_chat.input_tokens',
-            chunk.usage.input_tokens,
-            metadata,
-            context,
-            model
-        )
-        
+        cache_create = 0
+        try:
+            if chunk.cache_creation_input_tokens:
+                cache_create = chunk.cache_creation_input_tokens
+        except:
+            pass
+
+        total = chunk.usage + cache_create
+        if total > 0:
+            # Track input tokens
+            await context.track_usage(
+                PLUGIN_ID,
+                'stream_chat.input_tokens',
+                total,
+                metadata,
+                context,
+                model
+            )
+
+        if chunk.usage.output_tokens > 0:
         # Track output tokens
-        await context.track_usage(
-            PLUGIN_ID,
-            'stream_chat.output_tokens',
-            chunk.usage.output_tokens,
-            metadata,
-            context,
-            model
-        )
+            await context.track_usage(
+                PLUGIN_ID,
+                'stream_chat.output_tokens',
+                chunk.usage.output_tokens,
+                metadata,
+                context,
+                model
+            )
     except Exception as e:
         print(f"Error tracking usage: {e}")
         raise e
