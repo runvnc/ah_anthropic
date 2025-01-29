@@ -144,7 +144,7 @@ async def track_message_delta(chunk, total_output: str, model: str, context=None
                 cache_create = chunk.cache_creation_input_tokens
         except:
             pass
-        total = chunk.usage + cache_create
+        total = chunk.usage.output_tokens + cache_create
         if total > 0:
             # Track output tokens from final delta
             await context.track_usage(
