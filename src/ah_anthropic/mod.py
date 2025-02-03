@@ -7,8 +7,8 @@ from io import BytesIO
 import sys
 import json
 from .message_utils import compare_messages
-from .usage_tracking import debug_log_response, track_message_start, track_message_delta
-import .usage_tracking
+#from .usage_tracking import debug_log_response, track_message_start, track_message_delta
+from .usage_tracking import *
 
 client = anthropic.AsyncAnthropic(api_key=os.environ.get("ANTHROPIC_API_KEY"))
 
