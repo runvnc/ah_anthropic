@@ -88,15 +88,15 @@ async def handle_stream_chunk(chunk, total_output, model, context):
         return ''
 
 @service()
-async def stream_chat(model, messages=[], context=None, num_ctx=200000, temperature=0.0, max_tokens=2500, num_gpu_layers=0):
+async def stream_chat(model, messages=[], context=None, num_ctx=200000, temperature=0.0, max_tokens=25000, num_gpu_layers=0):
     try:
         global _last_messages
         print("anthropic stream_chat")
         messages = [dict(message) for message in messages]
         print('\033[93m' + '-'*80 + '\033[0m')
  
-        model = "claude-3-5-sonnet-20241022"
-        
+        #model = "claude-3-5-sonnet-20241022"
+        model = "claude-3-7-sonnet-latest"
         # Prepare messages
         system = prepare_system_message(messages[0])
         formatted_messages = prepare_formatted_messages(messages[1:])
@@ -117,7 +117,7 @@ async def stream_chat(model, messages=[], context=None, num_ctx=200000, temperat
                 temperature=0,
                 max_tokens=max_tokens,
                 stream=True,
-                extra_headers={"anthropic-beta": "prompt-caching-2024-07-31,max-tokens-3-5-sonnet-2024-07-15"}
+                extra_headers={"anthropic-beta": "prompt-caching-2024-07-31,output-128k-2025-02-19"}
         )
 
         async def content_stream():
