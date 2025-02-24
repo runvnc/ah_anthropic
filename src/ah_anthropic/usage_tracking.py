@@ -93,13 +93,13 @@ async def set_default_costs(context=None):
             'stream_chat.output_tokens',
             0.000015,  # $15 per million tokens
             'claude-3-5-sonnet-20241022'
-        )
+            )
         await context.set_cost(
             PLUGIN_ID,
             'stream_chat.input_tokens',
             0.000003,  # $3 per million tokens
             'claude-3-7-sonnet-latest')
-        )
+            
         print("Successfully set input token cost")
         
         print("Setting output token cost...")
