@@ -98,7 +98,7 @@ async def set_default_costs(context=None):
             PLUGIN_ID,
             'stream_chat.input_tokens',
             0.000003,  # $3 per million tokens
-            'claude-3-7-sonnet-latest'
+            'claude-3-7-sonnet-latest')
         )
         print("Successfully set input token cost")
         
@@ -107,7 +107,7 @@ async def set_default_costs(context=None):
             PLUGIN_ID,
             'stream_chat.output_tokens',
             0.000015,  # $15 per million tokens
-            'claude-3-7-sonnet-latest'
+            'claude-3-7-sonnet-latest')
          
         print("Successfully set output token cost")
     except Exception as e:
