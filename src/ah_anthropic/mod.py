@@ -95,6 +95,7 @@ async def stream_chat(model, messages=[], context=None, num_ctx=200000, temperat
         messages = [dict(message) for message in messages]
         print('\033[93m' + '-'*80 + '\033[0m')
  
+        max_tokens = 15000
         #model = "claude-3-5-sonnet-20241022"
         model = "claude-3-7-sonnet-latest"
         # Prepare messages
