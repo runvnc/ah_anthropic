@@ -88,7 +88,7 @@ async def handle_stream_chunk(chunk, total_output, model, context):
         return ''
 
 @service()
-async def stream_chat(model, messages=[], context=None, num_ctx=200000, temperature=0.0, max_tokens=5000, num_gpu_layers=0):
+async def stream_chat(model, messages=[], context=None, num_ctx=200000, temperature=0.0, max_tokens=15000, num_gpu_layers=0):
     try:
         global _last_messages
         print("anthropic stream_chat")
