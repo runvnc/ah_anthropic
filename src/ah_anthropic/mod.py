@@ -163,6 +163,7 @@ async def stream_chat(model, messages=[], context=None, num_ctx=200000, temperat
                 'type': 'enabled',
                 'budget_tokens': thinking_budget
             }
+            kwargs['temperature'] = 1
 
         original_stream = await client.messages.create(**kwargs)
 
