@@ -203,7 +203,7 @@ async def stream_chat(model, messages=[], context=None, num_ctx=200000, temperat
                         yield chunk_text
                         total_output += chunk_text
 
-                return content_stream()
+        return content_stream()
 
     except Exception as e:
         print('claude.ai error:', e)
