@@ -104,7 +104,8 @@ async def handle_stream_chunk(chunk, total_output, model, context, in_thinking_b
             if os.environ.get('AH_DEBUG') == 'True':
                 if hasattr(chunk.delta, 'thinking'):
                     print('\033[92m' + chunk.delta.thinking + '\033[0m', end='')
-            return chunk.delta.thinking, in_thinking_block
+            if hasattr(chunk.delta, 'thinking'):
+                return chunk.delta.thinking, in_thinking_block
         else:
             if os.environ.get('AH_DEBUG') == 'True':
                 if hasattr(chunk.delta, 'text'):
