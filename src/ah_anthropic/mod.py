@@ -102,7 +102,10 @@ async def handle_stream_chunk(chunk, total_output, model, context, in_thinking_b
     elif chunk.type == 'content_block_delta':
         if os.environ.get('AH_DEBUG') == 'True':
             print('\033[92m' + chunk.delta.text + '\033[0m', end='')
-        return chunk.delta.text, in_thinking_block
+        if in_thinking_block:
+            return chunk.delta.thinking, in_thinking_block
+        else:
+            return chunk.delta.text, in_thinking_block
     elif chunk.type == 'content_block_stop':
         # Check if we're exiting a thinking block
         if in_thinking_block:
