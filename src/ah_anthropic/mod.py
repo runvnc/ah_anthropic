@@ -126,6 +126,8 @@ async def handle_stream_chunk(chunk, total_output, model, context, in_thinking_b
             print('\033[93m' + str(chunk) + '\033[0m')
         return '', in_thinking_block
 
+    return '', in_thinking_block
+
 @service()
 async def stream_chat(model, messages=[], context=None, num_ctx=200000, temperature=0.0, max_tokens=15000, num_gpu_layers=0):
     try:
