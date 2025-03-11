@@ -59,12 +59,15 @@ def apply_message_caching(formatted_messages, last_messages):
     return formatted_messages
 
 
-def get_thinking_budget(context=None):
+def get_thinking_budget(context):
     """Get thinking budget from environment variable or use default"""
     thinking_level = os.environ.get('MR_THINKING_LEVEL', 'medium').lower()
 
-    #if context is not None:
-    #    thinking_level = context.get('thinking_level', thinking_level)
+    print("Context:")
+    print(context)
+
+    if context is not None:
+        thinking_level = context.get('thinking_level', thinking_level)
 
     # Define thinking budgets based on level
     budgets = {
