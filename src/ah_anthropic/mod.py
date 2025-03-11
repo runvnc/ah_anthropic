@@ -67,7 +67,7 @@ def get_thinking_budget(context):
     print(context)
 
     if context is not None:
-        thinking_level = context.get('thinking_level', thinking_level)
+        thinking_level = context.data.get('thinking_level', thinking_level)
 
     # Define thinking budgets based on level
     budgets = {
