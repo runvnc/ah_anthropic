@@ -59,10 +59,13 @@ def apply_message_caching(formatted_messages, last_messages):
     return formatted_messages
 
 
-def get_thinking_budget():
+def get_thinking_budget(context=None):
     """Get thinking budget from environment variable or use default"""
     thinking_level = os.environ.get('MR_THINKING_LEVEL', 'medium').lower()
-    
+
+    if context is not None:
+        thinking_level = context.get('thinking_level', thinking_level)
+
     # Define thinking budgets based on level
     budgets = {
         'off': 0,
@@ -73,7 +76,7 @@ def get_thinking_budget():
         'very_high': 32000,
         'maximum': 64000
     }
-    
+
     # Get budget from level or parse direct number
     if thinking_level in budgets:
         return budgets[thinking_level]
@@ -140,7 +143,7 @@ async def stream_chat(model, messages=[], context=None, num_ctx=200000, temperat
         model = "claude-3-7-sonnet-latest"
         
         # Get thinking budget
-        thinking_budget = get_thinking_budget()
+        thinking_budget = get_thinking_budget(context)
         thinking_enabled = thinking_budget > 0
         
         # Prepare messages
@@ -174,6 +177,10 @@ async def stream_chat(model, messages=[], context=None, num_ctx=200000, temperat
                 'budget_tokens': thinking_budget
             }
             kwargs['temperature'] = 1
+            if max_tokens < thinking_budget:
+                max_tokens += 5000
+                kwargs['max_tokens'] = max_tokens
+
 
         original_stream = await client.messages.create(**kwargs)
 
