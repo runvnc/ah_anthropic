@@ -142,7 +142,7 @@ async def stream_chat(model, messages=[], context=None, num_ctx=200000, temperat
         messages = [dict(message) for message in messages]
         print('\033[93m' + '-'*80 + '\033[0m')
  
-        max_tokens = 15000
+        max_tokens = os.environ.get("MR_MAX_TOKENS", 8000)
         model = "claude-3-7-sonnet-latest"
         
         # Get thinking budget
