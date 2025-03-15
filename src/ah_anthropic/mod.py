@@ -182,6 +182,8 @@ async def stream_chat(model, messages=[], context=None, num_ctx=200000, temperat
             kwargs['temperature'] = 1
             if max_tokens < thinking_budget:
                 max_tokens = thinking_budget + 5000
+                print("-------------------------------------------------------------------")
+                print("using thinking budget, adjusted max_tokens to", max_tokens)
                 kwargs['max_tokens'] = max_tokens
 
 
