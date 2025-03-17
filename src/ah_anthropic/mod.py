@@ -212,7 +212,7 @@ async def stream_chat(model, messages=[], context=None, num_ctx=200000, temperat
                     # If we're exiting a thinking block and entering content, emit the separator
                     if not in_thinking_block and thinking_emitted and chunk.type == 'content_block_stop':
                         yield '"}, \n'
-                        yield '<<CUT_HERE>>'
+                        #yield '<<CUT_HERE>>'
                         
                 # Handle the chunk text based on whether we're in a thinking block
                 if chunk_text:
