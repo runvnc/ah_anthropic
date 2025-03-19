@@ -180,11 +180,10 @@ async def stream_chat(model, messages=[], context=None, num_ctx=200000, temperat
                 'budget_tokens': thinking_budget
             }
             kwargs['temperature'] = 1
-            if True || max_tokens < thinking_budget:
-                max_tokens = thinking_budget * 2
-                print("-------------------------------------------------------------------")
-                print("using thinking budget, adjusted max_tokens to", max_tokens)
-                kwargs['max_tokens'] = max_tokens
+            max_tokens = thinking_budget * 2
+            print("-------------------------------------------------------------------")
+            print("using thinking budget, adjusted max_tokens to", max_tokens)
+            kwargs['max_tokens'] = max_tokens
 
 
         original_stream = await client.messages.create(**kwargs)
