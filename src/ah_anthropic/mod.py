@@ -142,7 +142,7 @@ async def stream_chat(model, messages=[], context=None, num_ctx=200000, temperat
         messages = [dict(message) for message in messages]
         print('\033[93m' + '-'*80 + '\033[0m')
  
-        max_tokens = os.environ.get("MR_MAX_TOKENS", 15000)
+        max_tokens = os.environ.get("MR_MAX_TOKENS", 4000)
         model = "claude-3-7-sonnet-latest"
         
         # Get thinking budget
@@ -180,8 +180,8 @@ async def stream_chat(model, messages=[], context=None, num_ctx=200000, temperat
                 'budget_tokens': thinking_budget
             }
             kwargs['temperature'] = 1
-            if max_tokens < thinking_budget:
-                max_tokens = thinking_budget + 5000
+            if True || max_tokens < thinking_budget:
+                max_tokens = thinking_budget * 2
                 print("-------------------------------------------------------------------")
                 print("using thinking budget, adjusted max_tokens to", max_tokens)
                 kwargs['max_tokens'] = max_tokens
