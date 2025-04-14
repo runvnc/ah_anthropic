@@ -23,7 +23,13 @@ def prepare_message_content(message):
 
 def prepare_system_message(message):
     """Prepare the system message with cache control"""
-    return [{'type': 'text', 'text': message['content'], 'cache_control': {'type': 'ephemeral'}}]
+    # if message content is a string
+    if isinstance(message['content'], str):
+        return [{'type': 'text', 'text': message['content'], 'cache_control': {'type': 'ephemeral'}}]
+    else:
+        text = message['content'][0]['text']
+        return [{'type': 'text', 'text': text, 'cache_control': {'type': 'ephemeral'}}]
+ 
 
 def prepare_formatted_messages(messages):
     """Format all non-system messages and remove existing cache control"""
