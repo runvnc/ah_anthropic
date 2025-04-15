@@ -151,7 +151,8 @@ async def stream_chat(model, messages=[], context=None, num_ctx=200000, temperat
  
         max_tokens = os.environ.get("MR_MAX_TOKENS", 4000)
         max_tokens = int(max_tokens)
-        model = "claude-3-7-sonnet-latest"
+        if model is None:
+            model = "claude-3-7-sonnet-latest"
         
         # Get thinking budget
         thinking_budget = get_thinking_budget(context)
