@@ -268,7 +268,8 @@ async def get_service_models(context=None):
     """Get available models for the service"""
     try:
         all_models = await client.models.list()
-        return { "stream_chat": all_models }
+        ids = [model.id for model in all_models]
+        return { "stream_chat": ids }
     except Exception as e:
         print('Error getting models (Anthropic):', e)
         return { "stream_chat": [] }
