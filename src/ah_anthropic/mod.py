@@ -271,8 +271,7 @@ async def get_service_models(context=None):
         print(all_models)
         ids = []
         for model in all_models.data:
-            (id, _, _) = model
-            ids.append(id)
+            ids.append(model[0])
 
         return { "stream_chat": ids }
     except Exception as e:
