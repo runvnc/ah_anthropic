@@ -268,7 +268,8 @@ async def get_service_models(context=None):
     """Get available models for the service"""
     try:
         all_models = await client.models.list()
-        for model in all_models:
+        print(all_models)
+        for model in all_models.data:
             print(model)
             print('---------------------------')
 
