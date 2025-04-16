@@ -268,6 +268,10 @@ async def get_service_models(context=None):
     """Get available models for the service"""
     try:
         all_models = await client.models.list()
+        for model in all_models:
+            print(model)
+            print('---------------------------')
+
         ids = [model.id for model in all_models]
         return { "stream_chat": ids }
     except Exception as e:
