@@ -264,7 +264,7 @@ async def get_image_dimensions(context=None):
 
 
 @service()
-async def get_service_models(context=None:
+async def get_service_models(context=None):
     """Get available models for the service"""
     try:
         all_models = await client.models.list()
