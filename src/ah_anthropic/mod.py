@@ -261,3 +261,15 @@ async def format_image_message(pil_image, context=None):
 @service()
 async def get_image_dimensions(context=None):
     return 1568, 1568, 1192464
+
+
+@service()
+async def get_service_models(context):
+    """Get available models for the service"""
+    try:
+        all_models = await client.models.list()
+        return { "stream_chat": all_models }
+    except Exception as e:
+        print('Error getting models (Anthropic):', e)
+        return { "stream_chat": [] }
+
