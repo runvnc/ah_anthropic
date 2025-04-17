@@ -142,7 +142,7 @@ async def handle_stream_chunk(chunk, total_output, model, context, in_thinking_b
     return '', in_thinking_block
 
 @service()
-async def stream_chat(model, messages=[], context=None, num_ctx=200000, temperature=0.0, max_tokens=15000, num_gpu_layers=0):
+async def stream_chat(model=None, messages=[], context=None, num_ctx=200000, temperature=0.0, max_tokens=15000, num_gpu_layers=0):
     try:
         global _last_messages
         print("anthropic stream_chat")
@@ -152,6 +152,7 @@ async def stream_chat(model, messages=[], context=None, num_ctx=200000, temperat
         max_tokens = os.environ.get("MR_MAX_TOKENS", 4000)
         max_tokens = int(max_tokens)
         if model is None:
+            print("Anthropic: model not specified; using default model claude-3-7-sonnet-latest")
             model = "claude-3-7-sonnet-latest"
         
         # Get thinking budget
