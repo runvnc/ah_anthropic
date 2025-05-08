@@ -8,8 +8,14 @@ import sys
 import json
 from .message_utils import compare_messages
 from .usage_tracking import *
+from lib.utils.backoff import ExponentialBackoff
 
 client = anthropic.AsyncAnthropic(api_key=os.environ.get("ANTHROPIC_API_KEY"))
+
+# Initialize a global backoff manager for Anthropic services
+# You might want to make these parameters configurable via environment variables or a config file
+anthropic_backoff_manager = ExponentialBackoff(initial_delay=2.0, max_delay=120.0, factor=2, jitter=True)
+MAX_RETRIES = 3
 
 # Store last sent messages
 _last_messages = []
@@ -143,104 +149,130 @@ async def handle_stream_chunk(chunk, total_output, model, context, in_thinking_b
 
 @service()
 async def stream_chat(model=None, messages=[], context=None, num_ctx=200000, temperature=0.0, max_tokens=15000, num_gpu_layers=0):
-    try:
-        global _last_messages
-        print("anthropic stream_chat")
-        messages = [dict(message) for message in messages]
-        print('\033[93m' + '-'*80 + '\033[0m')
- 
-        max_tokens = os.environ.get("MR_MAX_TOKENS", 4000)
-        max_tokens = int(max_tokens)
-        if model is None:
-            print("Anthropic: model not specified; using default model claude-3-7-sonnet-latest")
-            model = "claude-3-7-sonnet-latest"
-        
-        # Get thinking budget
-        thinking_budget = get_thinking_budget(context)
-        thinking_enabled = thinking_budget > 0
-        
-        # Prepare messages
-        system = prepare_system_message(messages[0])
-        formatted_messages = prepare_formatted_messages(messages[1:])
-        
-        # Apply caching strategy
-        formatted_messages = apply_message_caching(formatted_messages, _last_messages)
-        _last_messages = formatted_messages.copy()
+    global _last_messages
+    
+    # Determine model name at the beginning
+    if model is None:
+        print("Anthropic: model not specified; using default model claude-3-7-sonnet-latest")
+        model_name = "claude-3-7-sonnet-latest"
+    else:
+        model_name = model
+    
+    for attempt_num in range(MAX_RETRIES + 1):
+        try:
+            # Check and honor backoff before making the API call
+            wait_time = anthropic_backoff_manager.get_wait_time(model_name)
+            if wait_time > 0:
+                print(f"Anthropic model '{model_name}' is in backoff. Waiting for {wait_time:.2f} seconds before attempt {attempt_num + 1}.")
+                await asyncio.sleep(wait_time)
+            
+            # Original function logic starts here
+            print("anthropic stream_chat")
+            messages = [dict(message) for message in messages]
+            print('\033[93m' + '-'*80 + '\033[0m')
+     
+            max_tokens = os.environ.get("MR_MAX_TOKENS", 4000)
+            max_tokens = int(max_tokens)
+            
+            # Get thinking budget
+            thinking_budget = get_thinking_budget(context)
+            thinking_enabled = thinking_budget > 0
+            
+            # Prepare messages
+            system = prepare_system_message(messages[0])
+            formatted_messages = prepare_formatted_messages(messages[1:])
+            
+            # Apply caching strategy
+            formatted_messages = apply_message_caching(formatted_messages, _last_messages)
+            _last_messages = formatted_messages.copy()
 
-        # Debug output
-        print('\033[93m' + 'formatted_messages' + '\033[0m')
-        print(json.dumps(formatted_messages, indent=4))
-        
-        # Create message stream with thinking if enabled
-        kwargs = {
-            'model': model,
-            'system': system,
-            'messages': formatted_messages,
-            'temperature': temperature,
-            'max_tokens': max_tokens,
-            'stream': True,
-            'extra_headers': {"anthropic-beta": "prompt-caching-2024-07-31,output-128k-2025-02-19"}
-        }
-        
-        # Add thinking parameters if enabled
-        if thinking_enabled:
-            print(f"Enabling extended thinking with budget: {thinking_budget} tokens")
-            kwargs['thinking'] = {
-                'type': 'enabled',
-                'budget_tokens': thinking_budget
+            # Debug output
+            print('\033[93m' + 'formatted_messages' + '\033[0m')
+            print(json.dumps(formatted_messages, indent=4))
+            # Create message stream with thinking if enabled
+            kwargs = {
+                'model': model_name,  # Use model_name consistently
+                'system': system,
+                'messages': formatted_messages,
+                'temperature': temperature,
+                'max_tokens': max_tokens,
+                'stream': True,
+                'extra_headers': {"anthropic-beta": "prompt-caching-2024-07-31,output-128k-2025-02-19"}
             }
-            kwargs['temperature'] = 1
-            max_tokens = thinking_budget * 2
-            print("-------------------------------------------------------------------")
-            print("using thinking budget, adjusted max_tokens to", max_tokens)
-            kwargs['max_tokens'] = max_tokens
-
-
-        original_stream = await client.messages.create(**kwargs)
-
-        async def content_stream():
-            total_output = ""
-            thinking_content = ""
-            in_thinking_block = False
-            thinking_emitted = False
             
-            # If thinking is enabled, emit the start marker
+            # Add thinking parameters if enabled
             if thinking_enabled:
-                yield '[{"reasoning": "'
-                thinking_emitted = True
+                print(f"Enabling extended thinking with budget: {thinking_budget} tokens")
+                kwargs['thinking'] = {
+                    'type': 'enabled',
+                    'budget_tokens': thinking_budget
+                }
+                kwargs['temperature'] = 1
+                max_tokens = thinking_budget * 2
+                print("-------------------------------------------------------------------")
+                print("using thinking budget, adjusted max_tokens to", max_tokens)
+                kwargs['max_tokens'] = max_tokens
+
+
+            original_stream = await client.messages.create(**kwargs)
             
-            async for chunk in original_stream:
-                chunk_text, new_thinking_state = await handle_stream_chunk(
-                    chunk, total_output, model, context, in_thinking_block
-                )
+            # If successful, record success
+            anthropic_backoff_manager.record_success(model_name)
+
+            async def content_stream():
+                total_output = ""
+                thinking_content = ""
+                in_thinking_block = False
+                thinking_emitted = False
                 
-                # Track if we're entering or exiting a thinking block
-                if new_thinking_state != in_thinking_block:
-                    in_thinking_block = new_thinking_state
+                # If thinking is enabled, emit the start marker
+                if thinking_enabled:
+                    yield '[{"reasoning": "'
+                    thinking_emitted = True
+                async for chunk in original_stream:
+                    chunk_text, new_thinking_state = await handle_stream_chunk(
+                        chunk, total_output, model, context, in_thinking_block
+                    )
                     
-                    # If we're exiting a thinking block and entering content, emit the separator
-                    if not in_thinking_block and thinking_emitted and chunk.type == 'content_block_stop':
-                        yield '"}] \n'
-                        #yield '<<CUT_HERE>>'
+                    # Track if we're entering or exiting a thinking block
+                    if new_thinking_state != in_thinking_block:
+                        in_thinking_block = new_thinking_state
                         
-                # Handle the chunk text based on whether we're in a thinking block
-                if chunk_text:
-                    if in_thinking_block:
-                        # For thinking blocks, escape the text like in DeepSeek
-                        json_str = json.dumps(chunk_text)
-                        without_quotes = json_str[1:-1]
-                        yield without_quotes
-                        thinking_content += chunk_text
-                    else:
-                        # For regular content, just yield the text
-                        yield chunk_text
-                        total_output += chunk_text
+                        # If we're exiting a thinking block and entering content, emit the separator
+                        if not in_thinking_block and thinking_emitted and chunk.type == 'content_block_stop':
+                            yield '"}] \n'
 
-        return content_stream()
+                            
+                    # Handle the chunk text based on whether we're in a thinking block
+                    if chunk_text:
+                        if in_thinking_block:
+                            # For thinking blocks, escape the text like in DeepSeek
+                            json_str = json.dumps(chunk_text)
+                            without_quotes = json_str[1:-1]
+                            yield without_quotes
+                            thinking_content += chunk_text
+                        else:
+                            # For regular content, just yield the text
+                            yield chunk_text
+                            total_output += chunk_text
 
-    except Exception as e:
-        print('claude.ai error:', e)
-        raise
+            return content_stream()
+
+        except Exception as e:
+            # For this test, apply backoff to all errors (not just rate limit errors)
+            # In production, you might want to check for specific rate limit error messages
+            
+            # Record failure for this model
+            anthropic_backoff_manager.record_failure(model_name)
+            print(f"Anthropic error for '{model_name}' on attempt {attempt_num + 1}/{MAX_RETRIES + 1}: {e}")
+            
+            if attempt_num < MAX_RETRIES:
+                next_wait = anthropic_backoff_manager.get_wait_time(model_name)
+                print(f"Will retry after ~{next_wait:.2f} seconds.")
+                continue  # Go to the next iteration of the loop to retry
+            else:
+                print(f"Max retries ({MAX_RETRIES + 1}) reached for '{model_name}'. Raising final error.")
+                raise e  # Max retries exceeded, raise the last error
 
 @service()
 async def format_image_message(pil_image, context=None):
@@ -280,4 +312,3 @@ async def get_service_models(context=None):
     except Exception as e:
         print('Error getting models (Anthropic):', e)
         return { "stream_chat": [] }
-
