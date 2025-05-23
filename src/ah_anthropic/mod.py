@@ -14,7 +14,7 @@ client = anthropic.AsyncAnthropic(api_key=os.environ.get("ANTHROPIC_API_KEY"))
 
 # Initialize a global backoff manager for Anthropic services
 # You might want to make these parameters configurable via environment variables or a config file
-anthropic_backoff_manager = ExponentialBackoff(initial_delay=2.0, max_delay=16.0, factor=2, jitter=True)
+anthropic_backoff_manager = ExponentialBackoff(initial_delay=2.0, max_delay=32.0, factor=2, jitter=True)
 MAX_RETRIES = 8
 
 # Store last sent messages
