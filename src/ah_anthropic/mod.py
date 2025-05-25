@@ -148,7 +148,7 @@ async def handle_stream_chunk(chunk, total_output, model, context, in_thinking_b
     return '', in_thinking_block
 
 @service()
-async def stream_chat(model=None, messages=[], context=None, num_ctx=200000, temperature=0.0, max_tokens=15000, num_gpu_layers=0):
+async def stream_chat(model=None, messages=[], context=None, num_ctx=200000, temperature=0.0, max_tokens=32000, num_gpu_layers=0):
     global _last_messages
     
     # Determine model name at the beginning
