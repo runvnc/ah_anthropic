@@ -78,9 +78,13 @@ async def handle_stream_chunk(chunk, total_output, model, context, in_thinking_b
         return ('', in_thinking_block)
     elif chunk.type == 'content_block_delta':
         if in_thinking_block:
+            if os.environ.get('AH_DEBUG') == 'True':
+                if hasattr(chunk.delta, 'thinking'):
             if hasattr(chunk.delta, 'thinking'):
                 return (chunk.delta.thinking, in_thinking_block)
         else:
+            if os.environ.get('AH_DEBUG') == 'True':
+                if hasattr(chunk.delta, 'text'):
             return (chunk.delta.text, in_thinking_block)
     elif chunk.type == 'content_block_stop':
         if in_thinking_block:
@@ -90,6 +94,7 @@ async def handle_stream_chunk(chunk, total_output, model, context, in_thinking_b
         await track_message_delta(chunk, total_output, model, context)
         return ('', in_thinking_block)
     else:
+        if os.environ.get('AH_DEBUG') == 'True':
         return ('', in_thinking_block)
     return ('', in_thinking_block)
 
