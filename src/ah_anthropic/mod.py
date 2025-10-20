@@ -106,8 +106,9 @@ async def stream_chat(model=None, messages=[], context=None, num_ctx=200000, tem
             if wait_time > 0:
                 await asyncio.sleep(wait_time)
             messages = [dict(message) for message in messages]
-            max_tokens = os.environ.get('MR_MAX_TOKENS', 4000)
-            max_tokens = int(max_tokens)
+            if max_tokens == 32000:
+                max_tokens = os.environ.get('MR_MAX_TOKENS', 4000)
+                max_tokens = int(max_tokens)
             thinking_budget = get_thinking_budget(context)
             thinking_enabled = thinking_budget > 0
             system = prepare_system_message(messages[0])
@@ -119,6 +120,7 @@ async def stream_chat(model=None, messages=[], context=None, num_ctx=200000, tem
                 kwargs['thinking'] = {'type': 'enabled', 'budget_tokens': thinking_budget}
                 kwargs['temperature'] = 1
                 max_tokens = thinking_budget * 2
+                print(f"Override max tokens since thinking enabled: {max_tokens}")
                 kwargs['max_tokens'] = max_tokens
             original_stream = await client.messages.create(**kwargs)
             anthropic_backoff_manager.record_success(model_name)
