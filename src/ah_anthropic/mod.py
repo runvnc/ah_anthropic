@@ -122,6 +122,8 @@ async def stream_chat(model=None, messages=[], context=None, num_ctx=200000, tem
                 max_tokens = thinking_budget * 2
                 print(f"Override max tokens since thinking enabled: {max_tokens}")
                 kwargs['max_tokens'] = max_tokens
+            if 'fable' in model_name:
+                kwargs.pop('temperature', None)
             original_stream = await client.messages.create(**kwargs)
             anthropic_backoff_manager.record_success(model_name)
 
@@ -130,6 +132,7 @@ async def stream_chat(model=None, messages=[], context=None, num_ctx=200000, tem
                 thinking_content = ''
                 in_thinking_block = False
                 thinking_emitted = False
+                need_strip_bracket = False
                 if thinking_enabled:
                     yield '[{"reasoning": "'
                     thinking_emitted = True
@@ -138,7 +141,9 @@ async def stream_chat(model=None, messages=[], context=None, num_ctx=200000, tem
                     if new_thinking_state != in_thinking_block:
                         in_thinking_block = new_thinking_state
                         if not in_thinking_block and thinking_emitted and (chunk.type == 'content_block_stop'):
-                            yield '"}] \n'
+                            # Close reasoning value and object, add comma to continue the array
+                            yield '"}, '
+                            need_strip_bracket = True
                     if chunk_text:
                         if in_thinking_block:
                             json_str = json.dumps(chunk_text)
@@ -146,6 +151,18 @@ async def stream_chat(model=None, messages=[], context=None, num_ctx=200000, tem
                             yield without_quotes
                             thinking_content += chunk_text
                         else:
+                            # Strip the leading [ from LLM's command array so it merges
+                            # into the reasoning array
+                            if need_strip_bracket:
+                                chunk_text = chunk_text.lstrip()
+                                if not chunk_text:
+                                    # Pure whitespace chunk, keep waiting for the bracket
+                                    continue
+                                elif chunk_text.startswith('['):
+                                    chunk_text = chunk_text[1:]
+                                    need_strip_bracket = False
+                                else:
+                                    need_strip_bracket = False
                             yield chunk_text
                             total_output += chunk_text
             return content_stream()
