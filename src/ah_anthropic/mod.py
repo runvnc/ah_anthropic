@@ -150,8 +150,9 @@ async def stream_chat(model=None, messages=[], context=None, num_ctx=200000, tem
                     if chunk_text:
                         if in_thinking_block:
                             json_str = json.dumps(chunk_text)
-                            without_quotes = json_str[1:-1]
-                            yield without_quotes
+                            without_quotes = json_str[1:-1]                            
+                            if len(without_quotes)>0:
+                                yield without_quotes
                             thinking_content += chunk_text
                         else:
                             # Strip the leading [ from LLM's command array so it merges
@@ -166,7 +167,8 @@ async def stream_chat(model=None, messages=[], context=None, num_ctx=200000, tem
                                     need_strip_bracket = False
                                 else:
                                     need_strip_bracket = False
-                            yield chunk_text
+                            if len(chunk_text) > 0:
+                                yield chunk_text
                             total_output += chunk_text
             return content_stream()
         except Exception as e:
