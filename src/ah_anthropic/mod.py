@@ -11,6 +11,10 @@ from .usage_tracking import *
 from lib.utils.backoff import ExponentialBackoff
 client = anthropic.AsyncAnthropic(api_key=os.environ.get('ANTHROPIC_API_KEY'))
 anthropic_backoff_manager = ExponentialBackoff(initial_delay=2.0, max_delay=32.0, factor=2, jitter=True)
+
+# need traceback for error stack trace
+from traceback import format_exc
+
 MAX_RETRIES = 8
 _last_messages = []
 
@@ -167,6 +171,9 @@ async def stream_chat(model=None, messages=[], context=None, num_ctx=200000, tem
                             total_output += chunk_text
             return content_stream()
         except Exception as e:
+            trace = traceback.format_exc()
+            print("Error in anthropic stream_chat",e)
+            print(trace)
             anthropic_backoff_manager.record_failure(model_name)
             if attempt_num < MAX_RETRIES:
                 next_wait = anthropic_backoff_manager.get_wait_time(model_name)
