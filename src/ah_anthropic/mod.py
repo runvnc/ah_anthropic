@@ -171,7 +171,7 @@ async def stream_chat(model=None, messages=[], context=None, num_ctx=200000, tem
                             total_output += chunk_text
             return content_stream()
         except Exception as e:
-            trace = traceback.format_exc()
+            trace = format_exc()
             print("Error in anthropic stream_chat",e)
             print(trace)
             anthropic_backoff_manager.record_failure(model_name)
