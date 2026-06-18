@@ -126,7 +126,7 @@ async def stream_chat(model=None, messages=[], context=None, num_ctx=200000, tem
                 max_tokens = thinking_budget * 2
                 print(f"Override max tokens since thinking enabled: {max_tokens}")
                 kwargs['max_tokens'] = max_tokens
-            if 'fable' in model_name:
+            if 'fable' in model_name or 'opus' in model_name:
                 kwargs.pop('temperature', None)
             original_stream = await client.messages.create(**kwargs)
             anthropic_backoff_manager.record_success(model_name)
