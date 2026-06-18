@@ -19,9 +19,8 @@ def prepare_message_content(message):
     msg_copy = dict(message)
     if isinstance(msg_copy.get('content'), str):
         if len(msg_copy['content']) == 0:
-            msg_copy['content'] = [{'type': 'text', 'text': ' '}]
-        else:
-            msg_copy['content'] = [{'type': 'text', 'text': msg_copy['content']}]
+            msg_copy['content'] = '--'
+        msg_copy['content'] = [{'type': 'text', 'text': msg_copy['content']}]
     return msg_copy
 
 def prepare_system_message(message):
